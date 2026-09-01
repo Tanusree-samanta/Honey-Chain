@@ -24,10 +24,12 @@ export const BeekeeperAlerts: React.FC<BeekeeperAlertsProps> = ({
   const [acknowledgedMap, setAcknowledgedMap] = useState<Record<string, boolean>>({});
   const [resolvedMap, setResolvedMap] = useState<Record<string, boolean>>({});
 
+  const safeHives = hives || [];
+
   // Generate alerts dynamically from hives if not provided
   const derivedAlerts: ApiaryAlert[] = initialAlerts || [
-    ...hives
-      .filter(h => h.status === 'critical' || h.isSimulatedAbnormal || h.internalTemp > 38 || h.humidity > 70)
+    ...safeHives
+      .filter(h => h.status === 'critical' || h.isSimulatedAbnormal || (h.internalTemp && h.internalTemp > 38) || (h.humidity && h.humidity > 70))
       .map(h => ({
         id: `alert-${h.id}-crit`,
         hiveId: h.id,
@@ -38,7 +40,7 @@ export const BeekeeperAlerts: React.FC<BeekeeperAlertsProps> = ({
         message: `Internal temperature at ${h.internalTemp}°C (normal: 34-36°C) and relative humidity at ${h.humidity}%. Immediate brood inspection recommended.`,
         timestamp: '10 mins ago',
       })),
-    ...hives
+    ...safeHives
       .filter(h => h.status === 'attention' && !h.isSimulatedAbnormal)
       .map(h => ({
         id: `alert-${h.id}-att`,
@@ -52,9 +54,9 @@ export const BeekeeperAlerts: React.FC<BeekeeperAlertsProps> = ({
       })),
     {
       id: 'alert-sys-1',
-      hiveId: hives[0]?.id || 'hive-1',
-      hiveCode: hives[0]?.code || 'HIVE-001',
-      hiveLocation: hives[0]?.location || 'Sundarbans, Cluster A',
+      hiveId: safeHives[0]?.id || 'hive-1',
+      hiveCode: safeHives[0]?.code || 'HIVE-001',
+      hiveLocation: safeHives[0]?.location || 'Sundarbans, Cluster A',
       severity: 'info',
       title: 'LoRaWAN Gateway Signal Optimization',
       message: 'Apiary telemetry mesh connection re-anchored on 868MHz band. Signal SNR +12dB.',

@@ -2,30 +2,84 @@ import React, { useState } from 'react';
 import { HiveTelemetry, HoneyBatch } from '../../types';
 
 interface BeekeeperHiveDetailsProps {
-  hives: HiveTelemetry[];
-  selectedHiveId: string;
-  onSelectHive: (id: string) => void;
-  batches: HoneyBatch[];
-  onOpenAIHealth: (hiveId: string) => void;
-  onOpenCreateBatch: (hiveId: string) => void;
+  hives?: HiveTelemetry[];
+  selectedHiveId?: string;
+  onSelectHive?: (id: string) => void;
+  batches?: HoneyBatch[];
+  onOpenAIHealth?: (hiveId: string) => void;
+  onOpenCreateBatch?: (hiveId: string) => void;
+  onToggleAnomaly?: (hiveId: string) => void;
+  onAddInspectionNote?: (hiveId: string, note: string) => void;
+  onAddHive?: (hive: Partial<HiveTelemetry>) => void;
+  onNavigateToHealth?: () => void;
 }
 
 export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
-  hives,
+  hives = [],
   selectedHiveId,
   onSelectHive,
-  batches,
+  batches = [],
   onOpenAIHealth,
   onOpenCreateBatch,
+  onToggleAnomaly,
+  onAddInspectionNote,
+  onAddHive,
+  onNavigateToHealth,
 }) => {
   const [activeTab, setActiveTab] = useState<'sensors' | 'history' | 'batches'>('sensors');
   const [timeframe, setTimeframe] = useState<'24h' | '7d' | '30d'>('7d');
+  const [newNote, setNewNote] = useState('');
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
 
-  const hive = hives.find(h => h.id === selectedHiveId) || hives[0];
-  const hiveBatches = batches.filter(b => b.sourceHiveId === hive.id || b.sourceHiveCode === hive.code);
+  const hive: HiveTelemetry = (hives && hives.length > 0)
+    ? (hives.find(h => h.id === selectedHiveId) || hives[0])
+    : {
+        id: 'hive-1',
+        code: 'HIVE-001',
+        name: 'Mangrove Royal Alpha',
+        location: 'Sundarbans, West Bengal',
+        cluster: 'Sundarban Mangrove Cluster',
+        internalTemp: 34.8,
+        humidity: 62,
+        weight: 48.2,
+        weightChange24h: '+0.4 kg',
+        status: 'healthy',
+        healthScore: 94,
+        telemetryStatus: 'Online',
+        lastPing: '2 mins ago',
+        batteryLevel: 98,
+        connectivity: 'LoRaWAN Mesh',
+        metrics: {
+          tempStability: 96,
+          humidityVariance: 88,
+          weightGrowth: 92,
+          environmentalConsistency: 95,
+        },
+      };
+
+  const hiveBatches = (batches || []).filter(b => b.sourceHiveId === hive.id || b.sourceHiveCode === hive.code);
 
   const isHealthy = hive.status === 'healthy';
   const isCritical = hive.status === 'critical';
+
+  const handleHealthClick = () => {
+    if (onOpenAIHealth) onOpenAIHealth(hive.id);
+    else if (onNavigateToHealth) onNavigateToHealth();
+  };
+
+  const handleExtractClick = () => {
+    if (onOpenCreateBatch) onOpenCreateBatch(hive.id);
+  };
+
+  const handleSaveNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNote.trim()) return;
+    if (onAddInspectionNote) {
+      onAddInspectionNote(hive.id, newNote.trim());
+    }
+    setNewNote('');
+    setShowAddNoteModal(false);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -34,8 +88,8 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
         {hives.map(h => (
           <button
             key={h.id}
-            onClick={() => onSelectHive(h.id)}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
+            onClick={() => onSelectHive?.(h.id)}
+            className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
               h.id === hive.id
                 ? 'bg-[#1b4332] text-white shadow-md'
                 : 'bg-white text-[#534434] border border-[#d8c3ad]/40 hover:bg-[#f6ece6]'
@@ -70,7 +124,7 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
                 {hive.status}
               </span>
             </div>
-            <div className="text-xs text-[#534434] mt-1 flex items-center gap-3">
+            <div className="text-xs text-[#534434] mt-1 flex flex-wrap items-center gap-3">
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm text-[#855300]">location_on</span>
                 <span>{hive.location}</span>
@@ -83,22 +137,38 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          {onToggleAnomaly && (
+            <button
+              onClick={() => onToggleAnomaly(hive.id)}
+              className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                hive.isSimulatedAbnormal
+                  ? 'bg-[#ffdad6] text-[#ba1a1a] border-[#ffdad6]'
+                  : 'bg-[#fff4e5] text-[#855300] border-[#f59e0b]/40 hover:bg-[#ffe7cc]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm align-middle mr-1">bolt</span>
+              {hive.isSimulatedAbnormal ? 'Reset Anomaly' : 'Simulate Anomaly'}
+            </button>
+          )}
+
           <button
-            onClick={() => onOpenAIHealth(hive.id)}
-            className="flex-1 sm:flex-none px-4 py-2.5 bg-[#006c49] hover:bg-[#004e34] text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            onClick={handleHealthClick}
+            className="px-4 py-2.5 bg-[#006c49] hover:bg-[#004e34] text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">health_and_safety</span>
             <span>AI Health Deep Dive</span>
           </button>
 
-          <button
-            onClick={() => onOpenCreateBatch(hive.id)}
-            className="flex-1 sm:flex-none px-4 py-2.5 bg-[#855300] hover:bg-[#684000] text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-sm">add</span>
-            <span>Extract Honey Batch</span>
-          </button>
+          {onOpenCreateBatch && (
+            <button
+              onClick={handleExtractClick}
+              className="px-4 py-2.5 bg-[#855300] hover:bg-[#684000] text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              <span>Extract Batch</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -150,18 +220,18 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
             <span className="text-[11px] font-bold uppercase text-[#534434]">Solar / Battery</span>
             <span className="material-symbols-outlined text-base text-[#16a34a]">battery_charging_full</span>
           </div>
-          <div className="text-2xl font-black text-[#1f1b17]">{hive.batteryLevel}%</div>
+          <div className="text-2xl font-black text-[#1f1b17]">{hive.batteryLevel ?? 95}%</div>
           <div className="text-[10px] text-[#006c49] font-medium">+14.2V Solar Charging</div>
         </div>
       </div>
 
-      {/* Sub Tabs: Sensor Trends vs Batches */}
+      {/* Sub Tabs: Sensor Trends vs Batches vs Inspection Notes */}
       <div className="bg-white rounded-3xl p-6 border border-[#d8c3ad]/30 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-[#f0e6e0]">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('sensors')}
-              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'sensors'
                   ? 'bg-[#1b4332] text-white shadow-sm'
                   : 'text-[#534434] hover:bg-[#f6ece6]'
@@ -171,13 +241,23 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('batches')}
-              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'batches'
                   ? 'bg-[#1b4332] text-white shadow-sm'
                   : 'text-[#534434] hover:bg-[#f6ece6]'
               }`}
             >
               Linked Batches ({hiveBatches.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'history'
+                  ? 'bg-[#1b4332] text-white shadow-sm'
+                  : 'text-[#534434] hover:bg-[#f6ece6]'
+              }`}
+            >
+              Inspection Notes
             </button>
           </div>
 
@@ -187,7 +267,7 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
                 <button
                   key={t}
                   onClick={() => setTimeframe(t)}
-                  className={`px-3 py-1 rounded-lg uppercase ${
+                  className={`px-3 py-1 rounded-lg uppercase cursor-pointer ${
                     timeframe === t ? 'bg-white text-[#855300] font-extrabold shadow-sm' : 'text-[#534434]'
                   }`}
                 >
@@ -253,7 +333,7 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
               </div>
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'batches' ? (
           <div className="space-y-3">
             {hiveBatches.length > 0 ? (
               hiveBatches.map(b => (
@@ -267,19 +347,69 @@ export const BeekeeperHiveDetails: React.FC<BeekeeperHiveDetailsProps> = ({
                       </span>
                     </div>
                     <div className="text-[11px] text-[#534434] mt-1">
-                      Quantity: {b.quantityKg} kg • Harvested: {b.harvestDate} • Moisture: {b.moisturePercentage}%
+                      Quantity: {b.quantityKg} kg • Harvested: {b.harvestDate || b.extractedDate} • Moisture: {b.moisturePercentage}%
                     </div>
                   </div>
 
                   <div className="text-xs font-mono text-[#867461] bg-white px-2.5 py-1 rounded-lg border border-[#d8c3ad]/40">
-                    Hash: {b.blockchainHash.substring(0, 14)}...
+                    Hash: {(b.blockchainHash || '0x49f2b901').substring(0, 14)}...
                   </div>
                 </div>
               ))
             ) : (
               <div className="p-8 text-center text-xs text-[#867461]">
-                No batches extracted from {hive.code} yet. Click "+ Extract Honey Batch" to create one.
+                No batches extracted from {hive.code} yet.
               </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs font-bold text-[#1f1b17]">Field Inspection Log</h3>
+              <button
+                onClick={() => setShowAddNoteModal(true)}
+                className="px-3 py-1.5 bg-[#855300] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#684000]"
+              >
+                + Add Note
+              </button>
+            </div>
+
+            {hive.notes ? (
+              <div className="p-4 rounded-2xl bg-[#f6ece6] text-xs text-[#1f1b17] font-medium border border-[#d8c3ad]/40">
+                <div className="text-[10px] font-bold text-[#867461] mb-1">Latest Note:</div>
+                {hive.notes}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-xs text-[#867461]">
+                No inspection notes recorded for {hive.code}.
+              </div>
+            )}
+
+            {showAddNoteModal && (
+              <form onSubmit={handleSaveNote} className="p-4 rounded-2xl border border-[#d8c3ad] bg-white space-y-3">
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Record queen health, brood pattern, pest observations..."
+                  className="w-full text-xs p-3 border border-[#d8c3ad] rounded-xl focus:outline-none focus:border-[#855300]"
+                  rows={3}
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddNoteModal(false)}
+                    className="px-3 py-1.5 text-xs text-[#534434] hover:bg-[#f6ece6] rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 bg-[#1b4332] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#143225]"
+                  >
+                    Save Note
+                  </button>
+                </div>
+              </form>
             )}
           </div>
         )}

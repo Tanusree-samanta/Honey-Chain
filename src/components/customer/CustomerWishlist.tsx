@@ -11,14 +11,15 @@ interface CustomerWishlistProps {
 }
 
 export const CustomerWishlist: React.FC<CustomerWishlistProps> = ({
-  products,
-  wishlistIds,
+  products = [],
+  wishlistIds = [],
   onSelectProduct,
   onAddToCart,
   onRemoveWishlist,
   onShopHoney,
 }) => {
-  const wishlistedProducts = products.filter(p => wishlistIds.includes(p.id));
+  const safeWishlistIds = wishlistIds || [];
+  const wishlistedProducts = (products || []).filter(p => p && p.id && safeWishlistIds.includes(p.id));
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">

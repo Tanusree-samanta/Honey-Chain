@@ -13,15 +13,16 @@ interface CustomerBeekeeperProfileProps {
 
 export const CustomerBeekeeperProfile: React.FC<CustomerBeekeeperProfileProps> = ({
   beekeeper,
-  products,
-  batches,
+  products = [],
+  batches = [],
   onSelectProduct,
   onAddToCart,
   onViewTraceability,
   onBack,
 }) => {
-  const beekeeperProducts = products.filter(p => p.beekeeperId === beekeeper.id || beekeeper.id === 'bk-1');
-  const beekeeperBatches = batches.filter(b => b.beekeeperId === beekeeper.id || beekeeper.id === 'bk-1');
+  const beekeeperId = beekeeper?.id || 'bk-1';
+  const beekeeperProducts = (products || []).filter(p => p.beekeeperId === beekeeperId || beekeeperId === 'bk-1');
+  const beekeeperBatches = (batches || []).filter(b => b.beekeeperId === beekeeperId || beekeeperId === 'bk-1');
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-200">

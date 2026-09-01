@@ -10,11 +10,11 @@ interface CustomerShopProps {
 }
 
 export const CustomerShop: React.FC<CustomerShopProps> = ({
-  products,
+  products = [],
   onSelectProduct,
   onAddToCart,
   onToggleWishlist,
-  wishlistIds,
+  wishlistIds = [],
 }) => {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [maxPrice, setMaxPrice] = useState<number>(1000);
@@ -33,21 +33,27 @@ export const CustomerShop: React.FC<CustomerShopProps> = ({
   ];
 
   // Filtering
-  const filteredProducts = products.filter(p => {
-    if (selectedType !== 'all' && !p.title.toLowerCase().includes(selectedType.toLowerCase()) && !p.honeyType.toLowerCase().includes(selectedType.toLowerCase())) {
+  const safeProducts = products || [];
+  const filteredProducts = safeProducts.filter(p => {
+    if (!p) return false;
+    const title = (p.title || p.name || '').toLowerCase();
+    const type = (p.honeyType || '').toLowerCase();
+    const sel = selectedType.toLowerCase();
+
+    if (selectedType !== 'all' && !title.includes(sel) && !type.includes(sel)) {
       return false;
     }
-    if (p.price > maxPrice) return false;
+    if ((p.price || 0) > maxPrice) return false;
     if (selectedWeight !== 'all' && p.weightGrams !== selectedWeight) return false;
-    if (verifiedOnly && !p.isVerifiedTraceable) return false;
+    if (verifiedOnly && !p.isVerifiedTraceable && !p.traceabilityVerified) return false;
     return true;
   });
 
   // Sorting
-  filteredProducts.sort((a, b) => {
-    if (sortBy === 'price_low') return a.price - b.price;
-    if (sortBy === 'price_high') return b.price - a.price;
-    if (sortBy === 'rating') return b.rating - a.rating;
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === 'price_low') return (a.price || 0) - (b.price || 0);
+    if (sortBy === 'price_high') return (b.price || 0) - (a.price || 0);
+    if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
     return 0;
   });
 
@@ -201,7 +207,7 @@ export const CustomerShop: React.FC<CustomerShopProps> = ({
           {/* Top Bar Sort & Count */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl border border-[#d8c3ad]/30 shadow-xs">
             <span className="text-xs font-bold text-[#534434]">
-              Showing <strong className="text-[#1f1b17]">{filteredProducts.length}</strong> traceable honey products
+              Showing <strong className="text-[#1f1b17]">{sortedProducts.length}</strong> traceable honey products
             </span>
 
             <div className="flex items-center gap-2 text-xs">
@@ -220,10 +226,10 @@ export const CustomerShop: React.FC<CustomerShopProps> = ({
           </div>
 
           {/* Product Grid */}
-          {filteredProducts.length > 0 ? (
+          {sortedProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProducts.map(product => {
-                const isWishlisted = wishlistIds.includes(product.id);
+              {sortedProducts.map(product => {
+                const isWishlisted = (wishlistIds || []).includes(product.id);
 
                 return (
                   <div

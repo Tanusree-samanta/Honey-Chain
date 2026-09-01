@@ -2,22 +2,31 @@ import React, { useState } from 'react';
 import { HiveTelemetry, BeekeeperTab } from '../../types';
 
 interface BeekeeperDashboardProps {
-  hives: HiveTelemetry[];
-  onSelectHive: (id: string) => void;
+  hives?: HiveTelemetry[];
+  batches?: any[];
+  products?: any[];
+  orders?: any[];
+  onSelectHive?: (id: string) => void;
+  onSelectBatch?: (code: string) => void;
   onNavigate: (tab: BeekeeperTab) => void;
 }
 
 export const BeekeeperDashboard: React.FC<BeekeeperDashboardProps> = ({
-  hives,
+  hives = [],
+  batches = [],
+  products = [],
+  orders = [],
   onSelectHive,
+  onSelectBatch,
   onNavigate,
 }) => {
   const [timeRange, setTimeRange] = useState<'24H' | '7D' | '30D'>('7D');
 
-  const totalHives = hives.length;
-  const healthyCount = hives.filter(h => h.status === 'healthy').length;
-  const attentionCount = hives.filter(h => h.status === 'attention').length;
-  const criticalCount = hives.filter(h => h.status === 'critical').length;
+  const safeHives = hives || [];
+  const totalHives = safeHives.length;
+  const healthyCount = safeHives.filter(h => h.status === 'healthy').length;
+  const attentionCount = safeHives.filter(h => h.status === 'attention').length;
+  const criticalCount = safeHives.filter(h => h.status === 'critical').length;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-200">

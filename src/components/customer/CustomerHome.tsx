@@ -13,15 +13,18 @@ interface CustomerHomeProps {
 }
 
 export const CustomerHome: React.FC<CustomerHomeProps> = ({
-  products,
-  beekeepers,
+  products = [],
+  beekeepers = [],
   onNavigate,
   onSelectProduct,
   onSelectBeekeeper,
   onAddToCart,
   onToggleWishlist,
-  wishlistIds,
+  wishlistIds = [],
 }) => {
+  const safeProducts = products || [];
+  const safeBeekeepers = beekeepers || [];
+  const safeWishlistIds = wishlistIds || [];
   return (
     <div className="space-y-12 pb-12 animate-in fade-in duration-200">
       {/* Hero Banner Section */}
@@ -131,8 +134,8 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.slice(0, 4).map(product => {
-            const isWishlisted = wishlistIds.includes(product.id);
+          {safeProducts.slice(0, 4).map(product => {
+            const isWishlisted = safeWishlistIds.includes(product.id);
 
             return (
               <div
@@ -243,7 +246,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {beekeepers.slice(0, 3).map(bk => (
+          {safeBeekeepers.slice(0, 3).map(bk => (
             <div
               key={bk.id}
               onClick={() => {

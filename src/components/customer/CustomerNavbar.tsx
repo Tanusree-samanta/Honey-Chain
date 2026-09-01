@@ -47,8 +47,10 @@ export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
 
   // Search results calculation
   const q = searchQuery.toLowerCase().trim();
-  const matchedProducts = q ? products.filter(p => p.title.toLowerCase().includes(q) || p.honeyType.toLowerCase().includes(q)) : [];
-  const matchedBatches = q ? batches.filter(b => b.batchCode.toLowerCase().includes(q) || b.honeyType.toLowerCase().includes(q)) : [];
+  const safeProducts = products || [];
+  const safeBatches = batches || [];
+  const matchedProducts = q ? safeProducts.filter(p => ((p.title || p.name || '').toLowerCase().includes(q) || (p.honeyType || '').toLowerCase().includes(q))) : [];
+  const matchedBatches = q ? safeBatches.filter(b => ((b.batchCode || b.id || '').toLowerCase().includes(q) || (b.honeyType || '').toLowerCase().includes(q))) : [];
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#d8c3ad]/40 shadow-xs">

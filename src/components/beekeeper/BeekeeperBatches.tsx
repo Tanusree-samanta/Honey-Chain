@@ -10,8 +10,8 @@ interface BeekeeperBatchesProps {
 }
 
 export const BeekeeperBatches: React.FC<BeekeeperBatchesProps> = ({
-  batches,
-  hives,
+  batches = [],
+  hives = [],
   onCreateBatch,
   onViewTraceability,
   onGenerateQR,
@@ -20,7 +20,7 @@ export const BeekeeperBatches: React.FC<BeekeeperBatchesProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Form State
-  const [sourceHiveId, setSourceHiveId] = useState(hives[0]?.id || 'hive-1');
+  const [sourceHiveId, setSourceHiveId] = useState(hives?.[0]?.id || 'hive-1');
   const [honeyType, setHoneyType] = useState('Sundarban Wild Raw Honey');
   const [quantityKg, setQuantityKg] = useState(24.5);
   const [harvestDate, setHarvestDate] = useState(new Date().toISOString().split('T')[0]);
@@ -34,7 +34,8 @@ export const BeekeeperBatches: React.FC<BeekeeperBatchesProps> = ({
   const listedCount = 42;
   const soldCount = 29;
 
-  const filteredBatches = batches.filter(b => statusFilter === 'all' || b.status === statusFilter);
+  const safeBatches = batches || [];
+  const filteredBatches = safeBatches.filter(b => statusFilter === 'all' || b.status === statusFilter);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -8,14 +8,15 @@ interface BeekeeperOrdersProps {
 }
 
 export const BeekeeperOrders: React.FC<BeekeeperOrdersProps> = ({
-  orders,
+  orders = [],
   onUpdateOrderStatus,
   onViewTraceability,
 }) => {
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const filteredOrders = orders.filter(o => statusFilter === 'all' || o.status === statusFilter);
+  const safeOrders = orders || [];
+  const filteredOrders = safeOrders.filter(o => statusFilter === 'all' || o.status === statusFilter);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
