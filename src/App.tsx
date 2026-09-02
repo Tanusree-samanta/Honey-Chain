@@ -10,6 +10,10 @@ import {
   CustomerOrder,
   CartItem,
   UserAccount,
+  SmartBottle,
+  SecurityTimelineEvent,
+  LiveEventItem,
+  BottleNotification,
 } from './types';
 import {
   INITIAL_HIVES,
@@ -19,11 +23,17 @@ import {
   NORMALIZED_ORDERS,
   INITIAL_USER,
   INITIAL_CUSTOMER_USER,
+  INITIAL_BOTTLES,
+  INITIAL_LIVE_EVENTS,
+  INITIAL_NOTIFICATIONS,
+  generateSHA256Hash,
 } from './data/mockData';
 
 // Common Components
 import { WelcomeRoleModal } from './components/common/WelcomeRoleModal';
 import { HowHoneyChainWorks } from './components/common/HowHoneyChainWorks';
+import { DemoControlsModal } from './components/common/DemoControlsModal';
+import { LiveEventFeed } from './components/common/LiveEventFeed';
 
 // Beekeeper Components
 import { BeekeeperSidebar } from './components/beekeeper/BeekeeperSidebar';
@@ -35,6 +45,7 @@ import { BeekeeperPredictions } from './components/beekeeper/BeekeeperPrediction
 import { BeekeeperAlerts } from './components/beekeeper/BeekeeperAlerts';
 import { BeekeeperBatches } from './components/beekeeper/BeekeeperBatches';
 import { BeekeeperTraceability } from './components/beekeeper/BeekeeperTraceability';
+import { BeekeeperBottleSecurity } from './components/beekeeper/BeekeeperBottleSecurity';
 import { BeekeeperMyProducts } from './components/beekeeper/BeekeeperMyProducts';
 import { BeekeeperMarketplacePerformance } from './components/beekeeper/BeekeeperMarketplacePerformance';
 import { BeekeeperOrders } from './components/beekeeper/BeekeeperOrders';
@@ -48,6 +59,7 @@ import { CustomerHome } from './components/customer/CustomerHome';
 import { CustomerShop } from './components/customer/CustomerShop';
 import { CustomerProductDetails } from './components/customer/CustomerProductDetails';
 import { CustomerTraceability } from './components/customer/CustomerTraceability';
+import { CustomerDualVerification } from './components/customer/CustomerDualVerification';
 import { CustomerQRScanner } from './components/customer/CustomerQRScanner';
 import { CustomerCart } from './components/customer/CustomerCart';
 import { CustomerCheckout } from './components/customer/CustomerCheckout';
@@ -86,6 +98,13 @@ export function App() {
   const [orders, setOrders] = useState<CustomerOrder[]>(NORMALIZED_ORDERS);
   const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>(NORMALIZED_ORDERS[0]?.id || 'ord-1');
   const [latestPlacedOrder, setLatestPlacedOrder] = useState<CustomerOrder | null>(null);
+
+  // Smart Packaging, Tamper Detection & Live Event Stream State
+  const [bottles, setBottles] = useState<SmartBottle[]>(INITIAL_BOTTLES);
+  const [selectedBottleId, setSelectedBottleId] = useState<string>(INITIAL_BOTTLES[0]?.bottle_id || 'HC-BOT-2026-0089');
+  const [liveEvents, setLiveEvents] = useState<LiveEventItem[]>(INITIAL_LIVE_EVENTS);
+  const [notifications, setNotifications] = useState<BottleNotification[]>(INITIAL_NOTIFICATIONS);
+  const [showDemoModal, setShowDemoModal] = useState<boolean>(false);
 
   // E-commerce Cart & Wishlist
   const [cart, setCart] = useState<CartItem[]>([
@@ -255,6 +274,276 @@ export function App() {
     );
   };
 
+  // --- Smart Packaging, Tamper-Evident Cap & Hardware Simulation ---
+  const handleSimulateCapOpening = (bottleId: string) => {
+    const nowFormatted = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }) + ' • ' + new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    const target = bottles.find(b => b.bottle_id === bottleId) || bottles[0];
+    const txHash = generateSHA256Hash(`${target.bottle_id}-CAP-OPENED-${Date.now()}-${target.tamper_sensor_id}`);
+
+    // Update bottle immutably (once opened, never returns to sealed)
+    setBottles(prev =>
+      prev.map(b => {
+        if (b.bottle_id === target.bottle_id) {
+          const alreadyOpened = b.cap_status === 'OPENED';
+          const newCount = (b.tamper_event_count || 0) + (alreadyOpened ? 0 : 1);
+          const firstOpen = b.first_opened_at || nowFormatted;
+
+          const physicalStep: SecurityTimelineEvent = {
+            id: `ev-${Date.now()}-open`,
+            title: 'Physical Cap Unsealed',
+            timestamp: nowFormatted,
+            status: 'warning',
+            details: `Tamper conductive track severed on Smart Cap (Sensor: ${b.tamper_sensor_id}). Hermetic seal broken.`,
+            icon: 'lock_open',
+            blockchainHash: txHash,
+            txHash: txHash,
+          };
+
+          const ledgerStep: SecurityTimelineEvent = {
+            id: `ev-${Date.now()}-commit`,
+            title: 'Tamper Event Committed to Blockchain',
+            timestamp: nowFormatted,
+            status: 'completed',
+            details: 'Immutable cryptographic opening record verified and anchored.',
+            icon: 'verified',
+            blockchainHash: txHash,
+            txHash: txHash,
+          };
+
+          return {
+            ...b,
+            cap_status: 'OPENED' as const,
+            first_opened_at: firstOpen,
+            tamper_event_count: newCount,
+            verification_status: 'TAMPER_DETECTED' as const,
+            security_timeline: [...(b.security_timeline || []), physicalStep, ledgerStep],
+          };
+        }
+        return b;
+      })
+    );
+
+    // Prepend to Live Events stream
+    const newLiveEvent: LiveEventItem = {
+      id: `live-${Date.now()}`,
+      timestamp: 'Just now',
+      type: 'CAP_OPENED',
+      title: `Smart Cap Opened: ${target.bottle_id}`,
+      description: `Sensor ${target.tamper_sensor_id} circuit broken. Physical seal breached. Permanent state transition SEALED → OPENED.`,
+      txHash: txHash,
+      severity: 'warning',
+      bottleId: target.bottle_id,
+    };
+    setLiveEvents(prev => [newLiveEvent, ...prev]);
+
+    // Send high-priority notification
+    const newNotif: BottleNotification = {
+      id: `notif-${Date.now()}`,
+      title: `⚠️ Smart Cap Opened: ${target.bottle_id}`,
+      message: `Bottle ${target.bottle_id} from batch ${target.batch_id} was unsealed. State permanently recorded on chain.`,
+      timestamp: 'Just now',
+      type: 'cap_opened',
+      bottleId: target.bottle_id,
+      read: false,
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const handleSimulateDuplicateQR = (bottleId: string) => {
+    const target = bottles.find(b => b.bottle_id === bottleId) || bottles[0];
+    const txHash = generateSHA256Hash(`DUPLICATE-QR-${bottleId}-${Date.now()}`);
+
+    const newLiveEvent: LiveEventItem = {
+      id: `live-${Date.now()}`,
+      timestamp: 'Just now',
+      type: 'DUPLICATE_QR_DETECTED',
+      title: `Duplicate QR Code Flagged: ${target.bottle_id}`,
+      description: `Simultaneous scan detected across divergent geo-coordinates. Anti-counterfeiting token duplicate invalidated.`,
+      txHash: txHash,
+      severity: 'critical',
+      bottleId: target.bottle_id,
+    };
+    setLiveEvents(prev => [newLiveEvent, ...prev]);
+
+    const newNotif: BottleNotification = {
+      id: `notif-${Date.now()}`,
+      title: `🚨 Counterfeit QR Attempt Blocked`,
+      message: `Duplicate QR token detected for ${target.bottle_id}. Security audit flagged.`,
+      timestamp: 'Just now',
+      type: 'duplicate_qr',
+      bottleId: target.bottle_id,
+      read: false,
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const handleSimulateNFCReuse = (bottleId: string) => {
+    const target = bottles.find(b => b.bottle_id === bottleId) || bottles[0];
+    const txHash = generateSHA256Hash(`NFC-REUSE-${bottleId}-${Date.now()}`);
+
+    const newLiveEvent: LiveEventItem = {
+      id: `live-${Date.now()}`,
+      timestamp: 'Just now',
+      type: 'NFC_QR_MISMATCH',
+      title: `NFC Cryptographic Mismatch: ${target.bottle_id}`,
+      description: `Dynamic rolling CMAC failed verification on NFC token ${target.nfc_token}. Cloned tag rejected.`,
+      txHash: txHash,
+      severity: 'critical',
+      bottleId: target.bottle_id,
+    };
+    setLiveEvents(prev => [newLiveEvent, ...prev]);
+
+    const newNotif: BottleNotification = {
+      id: `notif-${Date.now()}`,
+      title: `🛡️ Clone Tag Rejected`,
+      message: `NFC signature verification failed for Bottle ${target.bottle_id}.`,
+      timestamp: 'Just now',
+      type: 'nfc_reuse',
+      bottleId: target.bottle_id,
+      read: false,
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const handleSimulateHoneyHarvest = (batchCode: string) => {
+    const txHash = generateSHA256Hash(`HARVEST-${batchCode}-${Date.now()}`);
+    const newLiveEvent: LiveEventItem = {
+      id: `live-${Date.now()}`,
+      timestamp: 'Just now',
+      type: 'NEW_HONEY_HARVEST',
+      title: `Raw Honey Harvest Extracted: ${batchCode}`,
+      description: `Super frames harvested and centrifugal extraction logged. Moisture: 17.6%.`,
+      txHash: txHash,
+      severity: 'success',
+    };
+    setLiveEvents(prev => [newLiveEvent, ...prev]);
+  };
+
+  const handleSimulateHiveAlert = (hiveId: string) => {
+    handleToggleSimulatedAnomaly(hiveId);
+    const newLiveEvent: LiveEventItem = {
+      id: `live-${Date.now()}`,
+      timestamp: 'Just now',
+      type: 'HIVE_HEALTH_UPDATED',
+      title: `Thermal Anomaly Triggered: ${hiveId}`,
+      description: `Brood temperature reached 39.4°C. Acoustic stress index elevated.`,
+      severity: 'critical',
+    };
+    setLiveEvents(prev => [newLiveEvent, ...prev]);
+  };
+
+  const handleCreateNewBatchDemo = () => {
+    const nextNum = batches.length + 1;
+    const nextCode = `HC-2026-${String(nextNum).padStart(4, '0')}`;
+    const batchHash = generateSHA256Hash(`BATCH-${nextCode}-${Date.now()}`);
+    const newBatch: HoneyBatch = {
+      id: `batch-${Date.now()}`,
+      batchCode: nextCode,
+      status: 'Packaged',
+      quantityKg: 120,
+      sourceLocation: 'Sundarbans Biosphere Reserve',
+      honeyType: 'Kashmir Acacia Blossom',
+      extractedDate: 'Oct 20, 2026',
+      sourceHiveCode: hives[0]?.code || 'HIVE-01',
+      beekeeperName: beekeeperUser.fullName || 'Priya Sharma',
+      moisturePercentage: 17.2,
+      blockchainHash: batchHash,
+      verified: true,
+      steps: [
+        {
+          id: `step-${Date.now()}`,
+          stageName: 'Harvest & Cold Extraction',
+          timestamp: 'Oct 20, 2026 • 08:30 AM',
+          operatorName: beekeeperUser.fullName || 'Priya Sharma',
+          location: 'Sundarbans Biosphere Reserve',
+          status: 'completed',
+          icon: 'agriculture',
+          details: 'Raw unheated artisanal extraction.',
+        },
+      ],
+    };
+    setBatches(prev => [newBatch, ...prev]);
+    setSelectedBatchCode(nextCode);
+
+    setLiveEvents(prev => [
+      {
+        id: `live-${Date.now()}`,
+        timestamp: 'Just now',
+        type: 'NEW_HONEY_HARVEST',
+        title: `New Honey Batch Minted: ${nextCode}`,
+        description: `${newBatch.honeyType} batch registered on Polygon POS ledger.`,
+        txHash: batchHash,
+        severity: 'success',
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleGenerateNewBottleDemo = () => {
+    const nextNum = bottles.length + 1;
+    const bId = `HC-BOT-2026-${String(nextNum).padStart(4, '0')}`;
+    const nfc = `NFC-${Math.floor(1000 + Math.random() * 8999)}-A410`;
+    const qr = `QR-${bId}-SEC`;
+    const cap = `CAP-HAL-${Math.floor(1000 + Math.random() * 9000)}`;
+    const hash = generateSHA256Hash(`${bId}-${nfc}-${qr}`);
+
+    const newBottle: SmartBottle = {
+      bottle_id: bId,
+      batch_id: selectedBatchCode || batches[0]?.batchCode || 'HC-2026-0001',
+      batchCode: selectedBatchCode || batches[0]?.batchCode || 'HC-2026-0001',
+      honeyType: 'Sundarbans Wild Mangrove Blossom Honey',
+      beekeeperName: beekeeperUser.fullName || 'Priya Sharma',
+      nfc_token: nfc,
+      qr_token: qr,
+      tamper_sensor_id: cap,
+      cap_status: 'SEALED',
+      first_opened_at: null,
+      tamper_event_count: 0,
+      verification_status: 'VERIFIED',
+      blockchain_status: 'Anchored on Polygon POS',
+      blockchain_tx: hash,
+      blockchain_hash: hash,
+      created_at: 'Just now',
+      security_timeline: [
+        {
+          id: `ev-${Date.now()}`,
+          title: 'Hermetic Cap Sealed & Sensor Calibrated',
+          timestamp: 'Just now',
+          status: 'completed',
+          details: `Smart tamper conductive seal verified intact. Sensor: ${cap}.`,
+          icon: 'lock',
+          blockchainHash: hash,
+        },
+      ],
+    };
+
+    setBottles(prev => [newBottle, ...prev]);
+    setSelectedBottleId(bId);
+
+    setLiveEvents(prev => [
+      {
+        id: `live-${Date.now()}`,
+        timestamp: 'Just now',
+        type: 'BOTTLE_REGISTERED',
+        title: `Smart Bottle Enrolled: ${bId}`,
+        details: `NFC Token ${nfc} paired with Tamper Sensor ${cap}.`,
+        hash: hash,
+        status: 'success',
+        bottleId: bId,
+      },
+      ...prev,
+    ]);
+  };
+
   // Find active items
   const activeProduct = products.find(p => p.id === selectedProductId) || products[0];
   const activeBeekeeper = beekeepers.find(b => b.id === selectedBeekeeperId) || beekeepers[0];
@@ -288,6 +577,7 @@ export function App() {
           <div className="flex-1 lg:pl-[260px] flex flex-col min-w-0 overflow-hidden">
             <BeekeeperTopBar
               currentTab={beekeeperTab}
+              onSelectTab={setBeekeeperTab}
               user={beekeeperUser}
               onSwitchToCustomer={() => setAppMode('customer')}
               onOpenSettings={() => setBeekeeperTab('settings')}
@@ -298,6 +588,8 @@ export function App() {
                 setSelectedBatchCode(code);
                 setBeekeeperTab('traceability');
               }}
+              onOpenDemoControls={() => setShowDemoModal(true)}
+              unreadTamperCount={notifications.filter(n => n.unread).length}
             />
 
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -308,6 +600,8 @@ export function App() {
                     batches={batches}
                     products={products}
                     orders={orders}
+                    bottles={bottles}
+                    liveEvents={liveEvents}
                     onNavigate={(tab) => setBeekeeperTab(tab)}
                     onSelectHive={handleSelectHive}
                     onSelectBatch={(code) => {
@@ -315,6 +609,28 @@ export function App() {
                       setBeekeeperTab('traceability');
                     }}
                   />
+                )}
+
+                {beekeeperTab === 'bottle_security' && (
+                  <div className="space-y-8">
+                    <BeekeeperBottleSecurity
+                      bottles={bottles}
+                      selectedBottleId={selectedBottleId}
+                      onSelectBottle={setSelectedBottleId}
+                      onSimulateCapOpening={handleSimulateCapOpening}
+                      onNavigateToTraceability={(code) => {
+                        setSelectedBatchCode(code);
+                        setBeekeeperTab('traceability');
+                      }}
+                      onOpenDemoControls={() => setShowDemoModal(true)}
+                    />
+                    <div className="bg-white rounded-3xl p-6 border border-[#d8c3ad]/30 shadow-sm">
+                      <LiveEventFeed
+                        events={liveEvents}
+                        onClear={() => setLiveEvents([])}
+                      />
+                    </div>
+                  </div>
                 )}
 
                 {(beekeeperTab === 'hives' || beekeeperTab === 'hive_details') && (
@@ -472,6 +788,7 @@ export function App() {
               setSelectedBatchCode(code);
               setCustomerTab('traceability');
             }}
+            onOpenDemoControls={() => setShowDemoModal(true)}
           />
 
           {/* Main Marketplace Area */}
@@ -532,6 +849,25 @@ export function App() {
               />
             )}
 
+            {customerTab === 'dual_verify' && (
+              <div className="space-y-8">
+                <CustomerDualVerification
+                  bottles={bottles}
+                  onSimulateCapOpening={handleSimulateCapOpening}
+                  onViewTraceability={(code) => {
+                    setSelectedBatchCode(code);
+                    setCustomerTab('traceability');
+                  }}
+                />
+                <div className="bg-white rounded-3xl p-6 border border-[#d8c3ad]/30 shadow-sm max-w-4xl mx-auto">
+                  <LiveEventFeed
+                    events={liveEvents}
+                    onClear={() => setLiveEvents([])}
+                  />
+                </div>
+              </div>
+            )}
+
             {(customerTab === 'qr_verify' || customerTab === 'qr_scanner') && (
               <CustomerQRScanner
                 batches={batches}
@@ -539,6 +875,7 @@ export function App() {
                   setSelectedBatchCode(code);
                   setCustomerTab('traceability');
                 }}
+                onNavigateToDualVerify={() => setCustomerTab('dual_verify')}
               />
             )}
 
@@ -738,6 +1075,22 @@ export function App() {
           </footer>
         </div>
       )}
+
+      {/* Interactive Hardware & Demo Simulation Modal */}
+      <DemoControlsModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        bottles={bottles}
+        hives={hives}
+        batches={batches}
+        onSimulateCapOpening={handleSimulateCapOpening}
+        onSimulateDuplicateQR={() => handleSimulateDuplicateQR(selectedBottleId)}
+        onSimulateNFCReuse={() => handleSimulateNFCReuse(selectedBottleId)}
+        onSimulateHiveAlert={() => handleSimulateHiveAlert(selectedHiveId)}
+        onSimulateHoneyHarvest={() => handleSimulateHoneyHarvest(selectedBatchCode)}
+        onCreateNewBatch={handleCreateNewBatchDemo}
+        onGenerateBottle={handleGenerateNewBottleDemo}
+      />
     </div>
   );
 }

@@ -202,7 +202,7 @@ export const BeekeeperBatches: React.FC<BeekeeperBatchesProps> = ({
                     </span>
                   </td>
                   <td className="py-3.5 font-mono text-[10px] text-[#867461]">
-                    {b.blockchainHash.substring(0, 10)}...
+                    {(b.blockchainHash || '0x7f8a9b2c').substring(0, 10)}...
                   </td>
                   <td className="py-3.5 text-right space-x-1.5">
                     <button

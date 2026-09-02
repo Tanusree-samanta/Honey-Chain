@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { HiveTelemetry, BeekeeperTab } from '../../types';
+import { HiveTelemetry, BeekeeperTab, SmartBottle, LiveEventItem } from '../../types';
 
 interface BeekeeperDashboardProps {
   hives?: HiveTelemetry[];
   batches?: any[];
   products?: any[];
   orders?: any[];
+  bottles?: SmartBottle[];
+  liveEvents?: LiveEventItem[];
   onSelectHive?: (id: string) => void;
   onSelectBatch?: (code: string) => void;
   onNavigate: (tab: BeekeeperTab) => void;
@@ -16,6 +18,8 @@ export const BeekeeperDashboard: React.FC<BeekeeperDashboardProps> = ({
   batches = [],
   products = [],
   orders = [],
+  bottles = [],
+  liveEvents = [],
   onSelectHive,
   onSelectBatch,
   onNavigate,
@@ -27,6 +31,9 @@ export const BeekeeperDashboard: React.FC<BeekeeperDashboardProps> = ({
   const healthyCount = safeHives.filter(h => h.status === 'healthy').length;
   const attentionCount = safeHives.filter(h => h.status === 'attention').length;
   const criticalCount = safeHives.filter(h => h.status === 'critical').length;
+
+  const sealedBottlesCount = bottles.filter(b => b.cap_status === 'SEALED').length;
+  const openedBottlesCount = bottles.filter(b => b.cap_status === 'OPENED').length;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-200">
@@ -166,6 +173,34 @@ export const BeekeeperDashboard: React.FC<BeekeeperDashboardProps> = ({
           </div>
           <div className="text-2xl sm:text-3xl font-black text-[#1f1b17] mt-2">128 <span className="text-sm font-semibold text-[#867461]">kg</span></div>
           <div className="text-[11px] text-[#006c49] font-bold mt-1">Next 30 Days (84% conf.)</div>
+        </div>
+      </div>
+
+      {/* Smart Packaging & Tamper Detection Quick Strip */}
+      <div 
+        onClick={() => onNavigate('bottle_security')}
+        className="bg-gradient-to-r from-[#1b4332] to-[#245842] text-white p-5 sm:p-6 rounded-3xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer hover:brightness-105 transition-all"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-[#fcd34d] text-[#1b4332] flex items-center justify-center text-2xl font-black shadow-md">
+            🍾
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-white">Smart Bottle Security & Tamper Ledger</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#adedd3] text-[#004e34] uppercase">
+                Dual NFC + QR
+              </span>
+            </div>
+            <p className="text-xs text-white/80 mt-0.5">
+              {sealedBottlesCount} bottles sealed • {openedBottlesCount} consumer unsealed • Cryptographic tamper tracking active
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs font-black text-[#fcd34d]">
+          <span>Inspect Digital Twins</span>
+          <span className="material-symbols-outlined text-sm">arrow_forward</span>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ export type BeekeeperTab =
   | 'alerts' 
   | 'batches' 
   | 'traceability' 
+  | 'bottle_security'
   | 'my_products' 
   | 'orders' 
   | 'marketplace_performance' 
@@ -27,6 +28,7 @@ export type CustomerTab =
   | 'traceability'
   | 'qr_verify'
   | 'qr_scanner'
+  | 'dual_verify'
   | 'cart'
   | 'checkout'
   | 'order_confirmation'
@@ -280,3 +282,119 @@ export interface UserAccount {
   registeredHivesCount?: number;
   totalBatchesTraced?: number;
 }
+
+// ==========================================
+// 1. SMART TAMPER-EVIDENT BOTTLE DATA MODEL
+// ==========================================
+
+export type CapStatus = 'SEALED' | 'OPENED';
+
+export interface SecurityTimelineEvent {
+  id: string;
+  title: string;
+  timestamp: string;
+  status: 'completed' | 'warning' | 'alert' | 'info';
+  details: string;
+  icon: string;
+  blockchainHash?: string;
+  txHash?: string;
+}
+
+export interface SmartBottle {
+  bottle_id: string;              // e.g. HC-BTL-928381
+  batch_id: string;               // e.g. HC-2026-0001
+  batchCode?: string;             // alias for display
+  honeyType: string;
+  beekeeperId?: string;
+  beekeeperName?: string;
+  nfc_token: string;              // e.g. NFC-9F82-A410-E732
+  qr_token: string;               // e.g. QR-BTL-928381-SEC
+  tamper_sensor_id: string;       // e.g. CAP-SNS-4881
+  cap_status: CapStatus;          // 'SEALED' | 'OPENED'
+  first_opened_at: string | null; // ISO date / time string or null
+  tamper_event_count: number;
+  verification_status: 'VERIFIED' | 'TAMPER_DETECTED' | 'UNVERIFIED' | 'SUSPICIOUS';
+  blockchain_status: string;      // e.g. 'Anchored on Polygon/Ethereum'
+  blockchain_tx?: string;
+  blockchain_hash?: string;
+  created_at: string;
+  dispatch_date?: string;
+  delivery_date?: string;
+  security_timeline: SecurityTimelineEvent[];
+}
+
+export type TamperEventType = 
+  | 'CAP_OPENED' 
+  | 'SEAL_BROKEN' 
+  | 'NFC_REUSE' 
+  | 'DUPLICATE_QR' 
+  | 'MISMATCH_DETECTED';
+
+export interface TamperEvent {
+  event_id: string;
+  bottle_id: string;
+  sensor_id: string;
+  event_type: TamperEventType;
+  timestamp: string;
+  device_status: string;
+  blockchain_hash: string;
+  blockchain_tx: string;
+  created_at: string;
+  notes?: string;
+}
+
+export type VerificationType = 'NFC_ONLY' | 'QR_ONLY' | 'DUAL_AUTH';
+
+export type VerificationResult = 
+  | 'PRODUCT_VERIFIED' 
+  | 'OPENED_AUTHENTIC' 
+  | 'POSSIBLE_COUNTERFEIT' 
+  | 'IDENTITY_MISMATCH' 
+  | 'BLOCKCHAIN_FAILED';
+
+export interface VerificationLog {
+  verification_id: string;
+  bottle_id: string;
+  nfc_token: string;
+  qr_token: string;
+  verification_type: VerificationType;
+  timestamp: string;
+  result: VerificationResult;
+  cap_status: CapStatus;
+  details: string;
+}
+
+export type LiveEventType =
+  | 'NFC_VERIFIED'
+  | 'QR_VERIFIED'
+  | 'BATCH_VERIFIED'
+  | 'HIVE_HEALTH_UPDATED'
+  | 'NEW_HONEY_HARVEST'
+  | 'CAP_OPENED'
+  | 'DUPLICATE_QR_DETECTED'
+  | 'NFC_QR_MISMATCH'
+  | 'BLOCKCHAIN_ANCHORED';
+
+export interface LiveEventItem {
+  id: string;
+  type: LiveEventType;
+  title: string;
+  description: string;
+  timestamp: string;
+  severity: 'success' | 'warning' | 'critical' | 'info';
+  bottleId?: string;
+  batchCode?: string;
+  txHash?: string;
+}
+
+export interface BottleNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  type: 'cap_opened' | 'duplicate_qr' | 'nfc_reuse' | 'nfc_qr_mismatch' | 'blockchain_failed' | 'suspicious' | 'info';
+  read: boolean;
+  bottleId?: string;
+  batchCode?: string;
+}
+

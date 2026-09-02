@@ -34,6 +34,7 @@ export const BeekeeperSidebar: React.FC<BeekeeperSidebarProps> = ({
     { id: 'alerts', label: 'Alerts', icon: 'notification_important', badge: alertBadgeCount, badgeColor: 'bg-[#ba1a1a]' },
     { id: 'batches', label: 'Honey Batches', icon: 'layers' },
     { id: 'traceability', label: 'Traceability', icon: 'account_tree' },
+    { id: 'bottle_security', label: 'Bottle Security', icon: 'shield_lock' },
     { id: 'my_products', label: 'My Products', icon: 'storefront' },
     { id: 'orders', label: 'Orders', icon: 'receipt_long', badge: activeOrdersCount, badgeColor: 'bg-[#f59e0b] text-[#1f1b17]' },
     { id: 'marketplace_performance', label: 'Marketplace', icon: 'store' },

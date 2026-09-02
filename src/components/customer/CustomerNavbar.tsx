@@ -15,6 +15,7 @@ interface CustomerNavbarProps {
   batches: HoneyBatch[];
   onSelectProduct?: (product: HoneyProduct) => void;
   onSelectBatch?: (batchCode: string) => void;
+  onOpenDemoControls?: () => void;
 }
 
 export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
@@ -30,6 +31,7 @@ export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
   batches,
   onSelectProduct,
   onSelectBatch,
+  onOpenDemoControls,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -40,6 +42,7 @@ export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
     { id: 'shop', label: 'Shop Honey' },
     { id: 'beekeepers', label: 'Explore Beekeepers' },
     { id: 'traceability', label: 'Traceability' },
+    { id: 'dual_verify', label: 'NFC + QR Dual Auth' },
     { id: 'qr_scanner', label: 'Verify Bottle' },
     { id: 'orders', label: 'My Orders' },
     { id: 'how_it_works', label: 'How It Works' },
@@ -62,6 +65,15 @@ export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
         </div>
 
         <div className="hidden sm:flex items-center gap-3">
+          {onOpenDemoControls && (
+            <button
+              onClick={onOpenDemoControls}
+              className="px-2.5 py-0.5 bg-[#fcd34d] hover:bg-[#fbbf24] text-[#1b4332] text-[11px] font-black rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-xs">tune</span>
+              <span>Demo Controls</span>
+            </button>
+          )}
           <DemoModeBadge currentMode="customer" onSwitchMode={onSwitchToBeekeeper} />
           <button
             onClick={onSwitchToBeekeeper}
@@ -219,12 +231,12 @@ export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
             className="flex items-center gap-2 p-1 pl-1 pr-2.5 rounded-full bg-[#f6ece6] hover:bg-[#ebd9cb] transition-colors border border-[#d8c3ad]/40 cursor-pointer"
           >
             <img
-              src={user.avatarUrl}
-              alt={user.fullName}
+              src={user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'}
+              alt={user?.fullName || 'User'}
               className="w-7 h-7 rounded-full object-cover border border-[#855300]/40"
             />
             <span className="hidden sm:inline text-xs font-bold text-[#1f1b17] truncate max-w-[80px]">
-              {user.fullName.split(' ')[0]}
+              {(user?.fullName || 'User').split(' ')[0]}
             </span>
           </button>
 

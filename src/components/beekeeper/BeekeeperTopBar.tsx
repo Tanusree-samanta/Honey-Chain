@@ -13,6 +13,8 @@ interface BeekeeperTopBarProps {
   onSwitchToCustomer?: () => void;
   onSelectHive?: (id: string) => void;
   onSelectBatch?: (code: string) => void;
+  onOpenDemoControls?: () => void;
+  unreadTamperCount?: number;
 }
 
 export const BeekeeperTopBar: React.FC<BeekeeperTopBarProps> = ({
@@ -26,6 +28,8 @@ export const BeekeeperTopBar: React.FC<BeekeeperTopBarProps> = ({
   onSwitchToCustomer,
   onSelectHive,
   onSelectBatch,
+  onOpenDemoControls,
+  unreadTamperCount = 0,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -70,6 +74,7 @@ export const BeekeeperTopBar: React.FC<BeekeeperTopBarProps> = ({
     { id: 'alerts', label: 'Alerts', icon: 'notification_important' },
     { id: 'batches', label: 'Honey Batches', icon: 'layers' },
     { id: 'traceability', label: 'Traceability', icon: 'account_tree' },
+    { id: 'bottle_security', label: 'Bottle Security', icon: 'shield_lock' },
     { id: 'my_products', label: 'My Products', icon: 'storefront' },
     { id: 'orders', label: 'Customer Orders', icon: 'receipt_long' },
     { id: 'marketplace_performance', label: 'Marketplace', icon: 'store' },
@@ -201,18 +206,29 @@ export const BeekeeperTopBar: React.FC<BeekeeperTopBarProps> = ({
 
       {/* Right Controls */}
       <div className="flex items-center gap-2.5">
+        {onOpenDemoControls && (
+          <button
+            onClick={onOpenDemoControls}
+            className="px-3 py-1.5 bg-[#855300] hover:bg-[#6c4300] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Open Demo Controls Modal"
+          >
+            <span className="material-symbols-outlined text-sm">tune</span>
+            <span className="hidden sm:inline">Demo Controls</span>
+          </button>
+        )}
+
         {onSwitchToCustomer && (
           <DemoModeBadge currentMode="beekeeper" onSwitchMode={onSwitchToCustomer} />
         )}
 
         {/* Notifications / Alerts button */}
         <button
-          onClick={() => handleTabChange('alerts')}
+          onClick={() => handleTabChange('bottle_security')}
           className="relative p-2 rounded-xl text-[#534434] hover:bg-[#f6ece6] transition-colors cursor-pointer"
-          title="Apiary Alerts"
+          title="Bottle Security & Alerts"
         >
-          <span className="material-symbols-outlined text-xl">notifications</span>
-          {criticalAlerts.length > 0 && (
+          <span className="material-symbols-outlined text-xl">shield_lock</span>
+          {unreadTamperCount > 0 && (
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#ba1a1a] ring-2 ring-white animate-ping" />
           )}
         </button>

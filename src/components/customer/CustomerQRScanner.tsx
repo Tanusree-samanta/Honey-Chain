@@ -4,11 +4,13 @@ import { HoneyBatch } from '../../types';
 interface CustomerQRScannerProps {
   batches: HoneyBatch[];
   onViewTraceability: (batchCode: string) => void;
+  onNavigateToDualVerify?: () => void;
 }
 
 export const CustomerQRScanner: React.FC<CustomerQRScannerProps> = ({
   batches,
   onViewTraceability,
+  onNavigateToDualVerify,
 }) => {
   const [manualCode, setManualCode] = useState('');
   const [scannedBatch, setScannedBatch] = useState<HoneyBatch | null>(batches[0] || null);
@@ -42,6 +44,18 @@ export const CustomerQRScanner: React.FC<CustomerQRScannerProps> = ({
         <p className="text-xs sm:text-sm text-[#534434] font-medium">
           Scan the QR code on your honey jar label or enter the batch code printed on the lid to verify its authentic harvest story.
         </p>
+
+        {onNavigateToDualVerify && (
+          <div className="pt-2">
+            <button
+              onClick={onNavigateToDualVerify}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#1b4332] text-[#fcd34d] hover:bg-[#133024] rounded-2xl text-xs font-black shadow-md transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">contactless</span>
+              <span>Need Smart Cap & NFC Tap Authentication? Click here →</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -155,7 +169,7 @@ export const CustomerQRScanner: React.FC<CustomerQRScannerProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#534434]">Cryptographic Hash:</span>
-                  <span className="font-mono text-[11px] text-[#867461]">{scannedBatch.blockchainHash.substring(0, 14)}...</span>
+                  <span className="font-mono text-[11px] text-[#867461]">{(scannedBatch.blockchainHash || '0x7f8a9b2c4d5e').substring(0, 14)}...</span>
                 </div>
               </div>
 

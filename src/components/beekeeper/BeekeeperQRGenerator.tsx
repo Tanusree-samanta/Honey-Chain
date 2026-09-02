@@ -107,7 +107,7 @@ export const BeekeeperQRGenerator: React.FC<BeekeeperQRGeneratorProps> = ({
               <ul className="text-[10px] text-[#534434] space-y-0.5 list-disc list-inside">
                 <li>Batch Code: <strong>{batch.batchCode}</strong></li>
                 <li>Hive Origin: <strong>{batch.sourceHiveCode}</strong></li>
-                <li>Ledger Root: <strong>{batch.blockchainHash.substring(0, 14)}...</strong></li>
+                <li>Ledger Root: <strong>{(batch?.blockchainHash || '0x49f2b901e8b7c6').substring(0, 14)}...</strong></li>
                 <li>Target URL: <strong>honeychain.app/verify/{batch.batchCode}</strong></li>
               </ul>
             </div>
