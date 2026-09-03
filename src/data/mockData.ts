@@ -13,6 +13,22 @@ import {
   BottleNotification
 } from '../types';
 
+import sundarbanHoneyImg from '../assets/images/sundarban_wild_honey_1788398146203.jpg';
+import mustardHoneyImg from '../assets/images/mustard_flower_honey_1788398159625.jpg';
+import litchiHoneyImg from '../assets/images/litchi_blossom_honey_1788398175006.jpg';
+import simlipalHoneyImg from '../assets/images/simlipal_forest_honey_1788398191109.jpg';
+import vedicHoneyImg from '../assets/images/vedic_amber_honey_1788398204894.jpg';
+import jungleHoneyImg from '../assets/images/jungle_blossom_honey_1788398223690.jpg';
+
+export {
+  sundarbanHoneyImg,
+  mustardHoneyImg,
+  litchiHoneyImg,
+  simlipalHoneyImg,
+  vedicHoneyImg,
+  jungleHoneyImg
+};
+
 export const INITIAL_USER: UserAccount = {
   id: 'usr-1',
   fullName: 'Rajesh Mondal',
@@ -136,11 +152,11 @@ export const INITIAL_PRODUCTS: HoneyProduct[] = [
     beekeeperLocation: 'Sundarbans, West Bengal',
     processingFacility: 'Kakdwip Cold Processing Facility #1',
     packagingCenter: 'Honey Chain Certified Packaging Hub A',
-    imageUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+    imageUrl: sundarbanHoneyImg,
     galleryImages: [
+      sundarbanHoneyImg,
       'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1471943311424-646960669fbc?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80'
     ],
     rating: 4.8,
     reviewsCount: 142,
@@ -170,8 +186,9 @@ export const INITIAL_PRODUCTS: HoneyProduct[] = [
     beekeeperLocation: 'Nadia, West Bengal',
     processingFacility: 'Ranaghat Organic Extraction Unit',
     packagingCenter: 'Honey Chain Certified Packaging Hub B',
-    imageUrl: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80',
+    imageUrl: mustardHoneyImg,
     galleryImages: [
+      mustardHoneyImg,
       'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80'
     ],
@@ -203,9 +220,11 @@ export const INITIAL_PRODUCTS: HoneyProduct[] = [
     beekeeperLocation: 'Muzaffarpur, Bihar',
     processingFacility: 'Bihar Agro-Tech Cold Unit',
     packagingCenter: 'Honey Chain Certified Packaging Hub A',
-    imageUrl: 'https://images.unsplash.com/photo-1471943311424-646960669fbc?auto=format&fit=crop&w=800&q=80',
+    imageUrl: litchiHoneyImg,
     galleryImages: [
-      'https://images.unsplash.com/photo-1471943311424-646960669fbc?auto=format&fit=crop&w=800&q=80'
+      litchiHoneyImg,
+      'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80'
     ],
     rating: 4.7,
     reviewsCount: 64,
@@ -235,9 +254,11 @@ export const INITIAL_PRODUCTS: HoneyProduct[] = [
     beekeeperLocation: 'Simlipal, Odisha',
     processingFacility: 'Mayurbhanj Tribal Eco-Unit',
     packagingCenter: 'Honey Chain Certified Packaging Hub C',
-    imageUrl: 'https://images.unsplash.com/photo-1549488344-cbb6c34cf08b?auto=format&fit=crop&w=800&q=80',
+    imageUrl: simlipalHoneyImg,
     galleryImages: [
-      'https://images.unsplash.com/photo-1549488344-cbb6c34cf08b?auto=format&fit=crop&w=800&q=80'
+      simlipalHoneyImg,
+      'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80'
     ],
     rating: 4.9,
     reviewsCount: 76,
@@ -267,7 +288,12 @@ export const INITIAL_PRODUCTS: HoneyProduct[] = [
     beekeeperLocation: 'Sundarbans, West Bengal',
     processingFacility: 'Kakdwip Cold Processing Facility #1',
     packagingCenter: 'Honey Chain Certified Packaging Hub A',
-    imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80',
+    imageUrl: vedicHoneyImg,
+    galleryImages: [
+      vedicHoneyImg,
+      'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80'
+    ],
     rating: 4.6,
     reviewsCount: 52,
     status: 'active',
@@ -296,7 +322,12 @@ export const INITIAL_PRODUCTS: HoneyProduct[] = [
     beekeeperLocation: 'Simlipal, Odisha',
     processingFacility: 'Jharkhand Forest Agro Center',
     packagingCenter: 'Honey Chain Certified Packaging Hub B',
-    imageUrl: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80',
+    imageUrl: jungleHoneyImg,
+    galleryImages: [
+      jungleHoneyImg,
+      'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80'
+    ],
     rating: 4.8,
     reviewsCount: 83,
     status: 'active',
